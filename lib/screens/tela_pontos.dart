@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/database.dart';
 import '../screens/tela_detalhes.dart';
 import '../widgets/menu_lateral.dart';
+import '../widgets/navegacao_abas.dart';
 
 
 class TelaPontos extends StatelessWidget {
@@ -39,6 +40,7 @@ class TelaPontos extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: const NavegacaoAbas(),
     );
   }
 }
