@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/tela_sobre.dart';
 import '../screens/tela_inicial.dart';
-import '../screens/tela_subcategorias.dart';
+import '../screens/tela_subcategoria.dart';
 
 class MenuLateral extends StatelessWidget {
   const MenuLateral({super.key});
@@ -28,46 +28,7 @@ class MenuLateral extends StatelessWidget {
             title: const Text('Inicio'),
             onTap: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => TelaInicial()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.location_city),
-            title: const Text('Parnaíba'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => TelaSubcategorias(
-                          cidadeId: 'cidade1',
-                        )),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.location_city),
-            title: const Text('Luis Correia'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => TelaSubcategorias(
-                          cidadeId: 'cidade2',
-                        )),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.location_city),
-            title: const Text('Cajueiro da Praia'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => TelaSubcategorias(
-                          cidadeId: 'cidade3',
-                        )),
-              );
+                  MaterialPageRoute(builder: (context) => const TelaInicial()));
             },
           ),
           ListTile(
@@ -76,7 +37,7 @@ class MenuLateral extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TelaSobre()),
+                MaterialPageRoute(builder: (context) => const TelaSobre()),
               );
             },
           ),

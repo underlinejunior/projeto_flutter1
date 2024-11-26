@@ -13,7 +13,14 @@ class TelaSobre extends StatelessWidget {
         title: const Text('Sobre o Aplicativo'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
+      body:Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blueAccent, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -24,7 +31,7 @@ class TelaSobre extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent,
+                  color: Colors.blueGrey,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
@@ -45,11 +52,11 @@ class TelaSobre extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Desenvolvido por:',
                         style: TextStyle(
@@ -79,7 +86,7 @@ class TelaSobre extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Este aplicativo foi desenvolvido  como t da disciplina de Programação para Dispositivos Móveis - Módulo IV do curso de Análise e Desenvolvimento de Sistemas.',
+                'Este aplicativo foi desenvolvido  como parte da disciplina de Programação para Dispositivos Móveis - Módulo IV do curso de Análise e Desenvolvimento de Sistemas.',
                 style: TextStyle(fontSize: 16, color: Colors.black87),
               ),
               const SizedBox(height: 20),
