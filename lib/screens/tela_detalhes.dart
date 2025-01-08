@@ -3,18 +3,36 @@ import '../data/database.dart';
 import '../widgets/menu_lateral.dart';
 import '../widgets/navegacao_abas.dart';
 
-class TelaDetalhes extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';//riverpod
+import 'package:litoral_turistico/providers/favorite_provider.dart';//provider de favoritos
+
+class TelaDetalhes extends ConsumerWidget  {
   final String pontoId;
 
   const TelaDetalhes({super.key, required this.pontoId});
+  
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
     final ponto = pontosDeInteresse.firstWhere((ponto) => ponto.id == pontoId);
+
+    final favoritePontos = ref.watch(favoritePontoProvider);//FAVORITOS
+    final isFavorite = favoritePontos.contains(ponto);//FAVORITOS
 
     return Scaffold(
       drawer: const MenuLateral(),
       appBar: AppBar(
+        actions: [
+          IconButton(
+          onPressed: (){
+            ref.read(favoritePontoProvider.notifier).togglePontoFavoriteStatus(ponto, context);
+          },
+           icon: Icon(
+            isFavorite ? Icons.star : Icons.star_border,
+            color: isFavorite ? Colors.yellowAccent : Colors.white,
+           ),
+           padding: const EdgeInsets.only(right: 20.0),
+        )],
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -68,7 +86,7 @@ class TelaDetalhes extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withOpacity(0.3),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(15),
                           bottomRight: Radius.circular(15),

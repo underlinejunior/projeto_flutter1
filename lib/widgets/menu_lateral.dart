@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/tela_sobre.dart';
 import '../screens/tela_inicial.dart';
-import '../screens/tela_subcategoria.dart';
 
 class MenuLateral extends StatelessWidget {
   const MenuLateral({super.key});

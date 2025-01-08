@@ -76,9 +76,23 @@ class TelaSubcategorias extends StatelessWidget {
                           return GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => TelaDetalhes(pontoId: ponto.id),
-                                ),
+                                PageRouteBuilder(pageBuilder: (context, animation ,secondaryAnimation )=>
+                                TelaDetalhes(pontoId: ponto.id),//CARREGAMENTO PARA SEGUNDA TELA
+                      transitionsBuilder: (context,animation, secondaryAnimation,child){
+                        var begin = const Offset(1.0, 0.0);
+                        var end = Offset.zero;
+                        var curve = Curves.ease;
+
+                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                        var offsetAnimation = animation.drive(tween);
+
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        );
+                      }
+                    ),
+                    
                               );
                             },
                             child: Card(

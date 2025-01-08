@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/database.dart'; // Certifique-se de que cidadesDisponiveis é definido aqui.
+import '../data/database.dart';
 import '../widgets/menu_lateral.dart';
 import '../widgets/navegacao_abas.dart';
 import 'tela_subCategoria.dart';
@@ -35,8 +35,21 @@ class TelaInicial extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => TelaSubcategorias(cidadeId: cidade.id),
+                    PageRouteBuilder(pageBuilder: (context, animation ,secondaryAnimation )=>
+                      TelaSubcategorias(cidadeId: cidade.id),//CARREGAMENTO PARA SEGUNDA TELA
+                      transitionsBuilder: (context,animation, secondaryAnimation,child){
+                        var begin = const Offset(1.0, 0.0);
+                        var end = Offset.zero;
+                        var curve = Curves.ease;
+
+                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                        var offsetAnimation = animation.drive(tween);
+
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        );
+                      }
                     ),
                   );
                 },

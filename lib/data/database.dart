@@ -25,12 +25,12 @@ const List<SubCategoria> tiposDePontos = [
   SubCategoria(
     id: 'historicosCulturais',
     nome: 'Históricos e Culturais',
-    pontos: ['p1', 'p10', 'p21', 'p27'],
+    pontos: ['p1', 'p10', 'p21', 'p27','p40', 'p41', 'p43'],
   ),
   SubCategoria(
     id: 'naturaisEcologicos',
     nome: 'Naturais e Ecológicos',
-    pontos: ['p2', 'p23', 'p24', 'p34', 'p35'],
+    pontos: ['p2', 'p23', 'p24', 'p34', 'p35', 'p42'],
   ),
   SubCategoria(
     id: 'praias',
@@ -101,6 +101,66 @@ const List<Ponto> pontosDeInteresse = [
     ],
     melhorHorarioParaVisitar: 'Tarde',
   ),
+  Ponto(
+  id: 'p40',
+  nome: 'Praça da Graça',
+  descricao: 'Praça central com ambiente acolhedor e eventos culturais frequentes.',
+  cidadeId: 'cidade1',
+  subCategoriaId: 'historicosCulturais',
+  urlImagem: 'assets/praca_da_graca.jpg',
+  localizacao: Localizacao(latitude: -2.902345, longitude: -41.776543),
+  caracteristicas: [
+    'Eventos ao ar livre',
+    'Monumentos históricos',
+    'Arborização agradável',
+  ],
+  melhorHorarioParaVisitar: 'Noite',
+),
+Ponto(
+  id: 'p41',
+  nome: 'Igreja Nossa Senhora da Graça',
+  descricao: 'Principal igreja histórica de Parnaíba, com arquitetura imponente.',
+  cidadeId: 'cidade1',
+  subCategoriaId: 'historicosCulturais',
+  urlImagem: 'assets/igreja_nossa_senhora.jpg',
+  localizacao: Localizacao(latitude: -2.902689, longitude: -41.775982),
+  caracteristicas: [
+    'Arquitetura colonial',
+    'Centro religioso',
+    'Ponto de interesse cultural',
+  ],
+  melhorHorarioParaVisitar: 'Manhã ou tarde',
+),
+Ponto(
+  id: 'p42',
+  nome: 'Ilha Grande de Santa Isabel',
+  descricao: 'Área preservada com ecossistemas únicos, manguezais e praias tranquilas.',
+  cidadeId: 'cidade1',
+  subCategoriaId: 'naturaisEcologicos',
+  urlImagem: 'assets/ilha_grande.jpg',
+  localizacao: Localizacao(latitude: -2.870123, longitude: -41.720456),
+  caracteristicas: [
+    'Natureza preservada',
+    'Ideal para ecoturismo',
+    'Passeios ecológicos',
+  ],
+  melhorHorarioParaVisitar: 'Manhã',
+),
+Ponto(
+  id: 'p43',
+  nome: 'Mercado Central de Parnaíba',
+  descricao: 'Mercado vibrante com produtos locais, artesanato e gastronomia típica.',
+  cidadeId: 'cidade1',
+  subCategoriaId: 'historicosCulturais',
+  urlImagem: 'assets/mercado_central.jpg',
+  localizacao: Localizacao(latitude: -2.903234, longitude: -41.774567),
+  caracteristicas: [
+    'Cultura local',
+    'Gastronomia típica',
+    'Compras de produtos regionais',
+  ],
+  melhorHorarioParaVisitar: 'Manhã',
+),
 
   // Pontos de Luís Correia
   Ponto(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/tela_inicial.dart';
 import '../screens/tela_sobre.dart';
+import '../screens/tela_favoritos.dart';
 
 class NavegacaoAbas extends StatelessWidget {
   const NavegacaoAbas({super.key});
@@ -13,6 +14,10 @@ class NavegacaoAbas extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: 'Início',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.star),
+          label: 'favoritos',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.info),
@@ -31,8 +36,13 @@ class NavegacaoAbas extends StatelessWidget {
         } else if (index == 1) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const TelaSobre()),
+            MaterialPageRoute(builder: (context) => const TelaFavoritos()),
             
+          );
+        } else if (index == 2) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const TelaSobre()),
           );
         }
       },
