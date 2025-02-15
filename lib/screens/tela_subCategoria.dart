@@ -1,144 +1,161 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import '../data/database.dart';
-import '../widgets/navegacao_abas.dart';
-import './tela_detalhes.dart';
-
+import 'package:litoral_turistico/screens/tela_detalhes.dart';
+import 'package:litoral_turistico/widgets/navegacao_abas.dart';
 
 class TelaSubcategorias extends StatelessWidget {
+  final String cidade;
   final String cidadeId;
+  const TelaSubcategorias({super.key, required this.cidade, required this.cidadeId});
 
-  const TelaSubcategorias({super.key, required this.cidadeId});
+  Future<Map<String, List<Map<String, dynamic>>>> _fetchSubcategoriasComPontos() async {
+    try {
+      final cidadeSnapshot = await FirebaseDatabase.instance.ref('Cidades/$cidadeId').get();
+      final pontosSnapshot = await FirebaseDatabase.instance.ref('Pontos').get();
+
+      if (cidadeSnapshot.exists && cidadeSnapshot.value != null && pontosSnapshot.exists && pontosSnapshot.value != null) {
+        final cidadeData = cidadeSnapshot.value as Map<dynamic, dynamic>;
+        final pontosData = pontosSnapshot.value as Map<dynamic, dynamic>;
+
+        final subcategorias = List<String>.from(cidadeData['subCategorias'] ?? []);
+        final Map<String, List<Map<String, dynamic>>> subcategoriasComPontos = {};
+
+        pontosData.forEach((key, ponto) {
+          final pontoMap = ponto as Map<dynamic, dynamic>;
+          final pontoCidadeId = pontoMap['cidadeId'] as String;
+          final subCategoriaId = pontoMap['subCategoriaId'] as String;
+
+          if (pontoCidadeId == cidadeId && subcategorias.contains(subCategoriaId)) {
+            final pontoDetalhado = {
+              ...pontoMap.cast<String, dynamic>(),
+              'id': key
+            };
+
+            if (!subcategoriasComPontos.containsKey(subCategoriaId)) {
+              subcategoriasComPontos[subCategoriaId] = [];
+            }
+            subcategoriasComPontos[subCategoriaId]!.add(pontoDetalhado);
+          }
+        });
+        return subcategoriasComPontos;
+      } else {
+        print("Dados do Firebase não encontrados.");
+        return {};
+      }
+    } catch (e) {
+      print('Erro ao buscar subcategorias e pontos: $e');
+      return {};
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Obtem a cidade e suas subcategorias
-    final cidade = cidadesDisponiveis.firstWhere((cidade) => cidade.id == cidadeId);
-    final subCategorias = cidade.subCategorias.map((subCategoriaId) {
-      return tiposDePontos.firstWhere((subCategoria) => subCategoria.id == subCategoriaId);
-    }).toList();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Subcategorias - ${cidade.nome}'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Pontos Turísticos em $cidade'),
+        centerTitle: true,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: subCategorias.length,
-          itemBuilder: (context, index) {
-            final subCategoria = subCategorias[index];
+      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+        future: _fetchSubcategoriasComPontos(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Erro ao carregar pontos.'));
+          }
 
-            // Filtra pontos turísticos pela subcategoria e cidade
-            final pontos = pontosDeInteresse.where((ponto) {
-              return ponto.subCategoriaId == subCategoria.id && ponto.cidadeId == cidadeId;
-            }).toList();
+          final subcategoriasComPontos = snapshot.data ?? {};
+          if (subcategoriasComPontos.isEmpty) {
+            return const Center(child: Text('Nenhum ponto encontrado.'));
+          }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    subCategoria.nome,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                pontos.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Nenhum ponto disponível nesta subcategoria.',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+          final Map<String, String> subcategoriaNomes = {
+            'historicosCulturais': 'Históricos e Culturais',
+            'naturaisEcologicos': 'Naturais e Ecológicos',
+          };
+
+          final Map<String, IconData> subcategoriaIcones = {
+            'historicosCulturais': Icons.history_edu,
+            'naturaisEcologicos': Icons.nature,
+          };
+
+          return ListView.builder(
+            itemCount: subcategoriasComPontos.keys.length,
+            itemBuilder: (context, index) {
+              final subCategoriaId = subcategoriasComPontos.keys.elementAt(index);
+              final pontos = subcategoriasComPontos[subCategoriaId]!;
+
+              final subcategoriaNome = subcategoriaNomes[subCategoriaId] ?? 'Subcategoria Desconhecida';
+              final subcategoriaIcon = subcategoriaIcones[subCategoriaId] ?? Icons.category;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(subcategoriaIcon, size: 30, color: Colors.blueAccent),
+                        const SizedBox(width: 8),
+                        Text(
+                          subcategoriaNome,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                         ),
-                      )
-                    : GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 3 / 2,
-                        ),
-                        itemCount: pontos.length,
-                        itemBuilder: (context, i) {
-                          final ponto = pontos[i];
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                PageRouteBuilder(pageBuilder: (context, animation ,secondaryAnimation )=>
-                                TelaDetalhes(pontoId: ponto.id),//CARREGAMENTO PARA SEGUNDA TELA
-                      transitionsBuilder: (context,animation, secondaryAnimation,child){
-                        var begin = const Offset(1.0, 0.0);
-                        var end = Offset.zero;
-                        var curve = Curves.ease;
-
-                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                        var offsetAnimation = animation.drive(tween);
-
-                        return SlideTransition(
-                          position: offsetAnimation,
-                          child: child,
-                        );
-                      }
+                      ],
                     ),
-                    
-                              );
-                            },
-                            child: Card(
-                              elevation: 4,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(12)),
-                                      child: Image.asset(
-                                        ponto.urlImagem,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            const Icon(Icons.broken_image, size: 40),
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      ponto.nome,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                    const SizedBox(height: 8),
+                    Column(
+                      children: pontos.map((ponto) {
+                        return Card(
+                          elevation: 6,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(12),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: ponto['urlImagem'] != null
+                                  ? Image.network(
+                                      ponto['urlImagem'],
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Icon(Icons.image, size: 80, color: Colors.grey),
+                            ),
+                            title: Text(
+                              ponto['nome'] as String,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                ponto['descricao'] as String,
+                                style: const TextStyle(fontSize: 14, color: Colors.black54),
                               ),
                             ),
-                          );
-                        },
-                      ),
-              ],
-            );
-          },
-        ),
-        
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TelaDetalhesPonto(pontoId: ponto['id']),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
-       bottomNavigationBar: const NavegacaoAbas(),
+      bottomNavigationBar: const NavegacaoAbas(),
     );
   }
 }

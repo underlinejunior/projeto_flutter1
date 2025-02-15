@@ -1,190 +1,307 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import '../data/database.dart';
-import '../widgets/menu_lateral.dart';
-import '../widgets/navegacao_abas.dart';
+import 'package:litoral_turistico/widgets/navegacao_abas.dart';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';//riverpod
-import 'package:litoral_turistico/providers/favorite_provider.dart';//provider de favoritos
-
-class TelaDetalhes extends ConsumerWidget  {
+class TelaDetalhesPonto extends StatefulWidget {
   final String pontoId;
-
-  const TelaDetalhes({super.key, required this.pontoId});
-  
+  const TelaDetalhesPonto({super.key, required this.pontoId});
 
   @override
-  Widget build(BuildContext context,WidgetRef ref) {
-    final ponto = pontosDeInteresse.firstWhere((ponto) => ponto.id == pontoId);
+  _TelaDetalhesPontoState createState() => _TelaDetalhesPontoState();
+}
 
-    final favoritePontos = ref.watch(favoritePontoProvider);//FAVORITOS
-    final isFavorite = favoritePontos.contains(ponto);//FAVORITOS
+class _TelaDetalhesPontoState extends State<TelaDetalhesPonto> {
+  final TextEditingController _comentarioController = TextEditingController();
+  late Future<Map<String, dynamic>> _pontoFuture;
+  late DatabaseReference _comentariosRef;
+  bool _isFavorito = false;
+  String? _comentarioEditandoId;
+  String? _comentarioEditandoTexto;
 
+  @override
+  void initState() {
+    super.initState();
+    _pontoFuture = _fetchPontoDetalhes();
+    _comentariosRef =
+        FirebaseDatabase.instance.ref('Comentarios/${widget.pontoId}');
+    _checkFavoritoStatus();
+  }
+
+  Future<Map<String, dynamic>> _fetchPontoDetalhes() async {
+    final pontoSnapshot =
+        await FirebaseDatabase.instance.ref('Pontos/${widget.pontoId}').get();
+    if (pontoSnapshot.exists && pontoSnapshot.value != null) {
+      final pontoData = pontoSnapshot.value as Map<dynamic, dynamic>;
+      return pontoData.cast<String, dynamic>();
+    } else {
+      throw Exception("Ponto não encontrado.");
+    }
+  }
+
+  Future<void> _adicionarComentario(String comentario) async {
+    if (comentario.trim().isEmpty) return;
+    final novoComentario = {
+      'texto': comentario,
+      'data': DateTime.now().toIso8601String(),
+    };
+    if (_comentarioEditandoId != null) {
+      // Editar comentário existente
+      await _comentariosRef.child(_comentarioEditandoId!).update(novoComentario);
+    } else {
+      // Adicionar novo comentário
+      await _comentariosRef.push().set(novoComentario);
+    }
+    _comentarioController.clear();
+    setState(() {
+      _comentarioEditandoId = null; // Reseta o estado após a edição ou adição
+      _comentarioEditandoTexto = null;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchComentarios() async {
+    final snapshot = await _comentariosRef.get();
+    if (snapshot.exists) {
+      final comentariosData = snapshot.value as Map<dynamic, dynamic>;
+      return comentariosData.entries.map((e) {
+        final data = e.value as Map<dynamic, dynamic>;
+        return {'id': e.key, ...data.cast<String, dynamic>()};
+      }).toList();
+    }
+    return [];
+  }
+
+  Future<void> _toggleFavorito() async {
+    final favoritoRef = FirebaseDatabase.instance.ref('Favoritos/${widget.pontoId}'); // Favoritos globais
+
+    setState(() {
+      _isFavorito = !_isFavorito;
+    });
+
+    if (_isFavorito) {
+      // Marca o ponto como favorito
+      await favoritoRef.set(true);
+    } else {
+      // Remove o ponto dos favoritos
+      await favoritoRef.remove();
+    }
+  }
+
+  Future<void> _checkFavoritoStatus() async {
+    final favoritoRef = FirebaseDatabase.instance.ref('Favoritos/${widget.pontoId}'); // Referência global
+
+    final snapshot = await favoritoRef.get();
+    setState(() {
+      _isFavorito = snapshot.exists; // Verifica se o ponto está nos favoritos
+    });
+  }
+
+  Future<void> _excluirComentario(String comentarioId) async {
+    final comentarioRef = _comentariosRef.child(comentarioId);
+    await comentarioRef.remove(); // Remove o comentário
+    setState(() {});
+  }
+
+  void _editarComentario(String comentarioId, String comentarioTexto) {
+    setState(() {
+      _comentarioEditandoId = comentarioId;
+      _comentarioEditandoTexto = comentarioTexto;
+      _comentarioController.text = comentarioTexto;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const MenuLateral(),
       appBar: AppBar(
+        title: const Text('Detalhes do Ponto'),
         actions: [
           IconButton(
-          onPressed: (){
-            ref.read(favoritePontoProvider.notifier).togglePontoFavoriteStatus(ponto, context);
-          },
-           icon: Icon(
-            isFavorite ? Icons.star : Icons.star_border,
-            color: isFavorite ? Colors.yellowAccent : Colors.white,
-           ),
-           padding: const EdgeInsets.only(right: 20.0),
-        )],
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
-          cidadesDisponiveis
-                            .firstWhere((cidade) => cidade.id == ponto.cidadeId)
-                            .nome,
-        ),
+            icon: Icon(
+              _isFavorito ? Icons.star : Icons.star_border,
+              color: _isFavorito ? Colors.yellow : Colors.white,
+            ),
+            onPressed: _toggleFavorito,
+          ),
+        ],
       ),
-      body: Container(
-  width: double.infinity,
-  height: MediaQuery.of(context).size.height, // Garante que ocupe toda a altura da tela
-  decoration: const BoxDecoration(
-    gradient: LinearGradient(
-      colors: [Colors.blueAccent, Colors.white],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    ),
-  ),
-  child: SingleChildScrollView(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-          const SizedBox(height: 10),
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.network(
-                      ponto.urlImagem,
-                      width: double.infinity,
-                      height: 300,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.broken_image,
-                          size: 50,
-                          color: Colors.red,
-                        );
-                      },
-                    ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _pontoFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(
+                child: Text('Erro ao carregar dados do ponto.'));
+          }
+
+          final ponto = snapshot.data;
+          if (ponto == null) {
+            return const Center(child: Text('Ponto não encontrado.'));
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              if (ponto['urlImagem'] != null && ponto['urlImagem'].isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.network(
+                    ponto['urlImagem'],
+                    fit: BoxFit.cover,
+                    height: 250,
                   ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(15),
-                          bottomRight: Radius.circular(15),
-                        ),
-                      ),
+                ),
+              const SizedBox(height: 16),
+              Text(
+                ponto['nome'] ?? 'Nome não disponível',
+                style:
+                    const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(2, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.description, color: Colors.blueAccent, size: 30),
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        ponto.nome,
+                        ponto['descricao'] ?? 'Descrição não disponível',
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
+                            fontSize: 18, color: Colors.black87),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              Card(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                           Icon(Icons.description, color: Colors.blue),
-                           SizedBox(width: 10),
-                           Text(
-                            'Descrição:',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        ponto.descricao,
-                        style: const TextStyle(fontSize: 16),
-                        softWrap: true,
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Colors.blue),
-                  const SizedBox(width: 10),
+                  const Icon(Icons.location_on, color: Colors.green, size: 30),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'lat: ${ponto.localizacao.latitude} / long: ${ponto.localizacao.longitude}',
+                      'Localização: ${ponto['localizacao'] ?? 'Localização não disponível'}',
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              Card(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.schedule, color: Colors.blue),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Melhor Horário:',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            ponto.melhorHorarioParaVisitar,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.orange, size: 30),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Melhor horário para visitar: ${ponto['melhorHorarioParaVisitar'] ?? 'Horário não disponível'}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _comentarioController,
+                decoration: InputDecoration(
+                  labelText: _comentarioEditandoTexto != null
+                      ? 'Editar comentário'
+                      : 'Adicione um comentário',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.blueAccent),
+                    onPressed: () =>
+                        _adicionarComentario(_comentarioController.text),
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              const Text('Comentários:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              FutureBuilder<List<Map<String, dynamic>>>( 
+                future: _fetchComentarios(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final comentarios = snapshot.data ?? [];
+                  if (comentarios.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Nenhum comentário ainda.'),
+                    );
+                  }
+                  comentarios.sort((a, b) => DateTime.parse(b['data'])
+                      .compareTo(DateTime.parse(a['data'])));
+
+                  return Container(
+                    height: 200,
+                    padding: const EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: .2),
+                          blurRadius: 4,
+                          offset: const Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    child: ListView.builder(
+                      itemCount: comentarios.length,
+                      itemBuilder: (context, index) {
+                        final comentario = comentarios[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 8),
+                          child: ListTile(
+                            title: Text(comentario['texto']),
+                            subtitle: Text('Postado em: ${comentario['data']}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _editarComentario(
+                                        comentario['id'], comentario['texto']);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _excluirComentario(comentario['id']);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ],
-          ),
-        ),
+          );
+        },
       ),
       bottomNavigationBar: const NavegacaoAbas(),
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056630753747",
+    "project_id": "pontosturisticoslitoralpi",
+    "storage_bucket": "pontosturisticoslitoralpi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056630753747:android:c15b9ced5b2249b1d84726",
+        "android_client_info": {
+          "package_name": "com.example.litoral_turistico"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0fg_gCJDTEs1U3rcDg0fNqpvvcKBljYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:litoral_turistico/screens/tela_login.dart';
 import '../screens/tela_sobre.dart';
 import '../screens/tela_inicial.dart';
 
@@ -27,7 +29,7 @@ class MenuLateral extends StatelessWidget {
             title: const Text('Inicio'),
             onTap: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const TelaInicial()));
+                  MaterialPageRoute(builder: (context) => TelaPrincipal()));
             },
           ),
           ListTile(
@@ -37,6 +39,17 @@ class MenuLateral extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const TelaSobre()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text('Sair'),
+            onTap: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
               );
             },
           ),

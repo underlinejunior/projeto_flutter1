@@ -30,7 +30,7 @@ class NavegacaoAbas extends StatelessWidget {
         if (index == 0) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const TelaInicial()),
+            MaterialPageRoute(builder: (context) =>  TelaPrincipal()),
           );
           
         } else if (index == 1) {
